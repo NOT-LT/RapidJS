@@ -1,0 +1,31 @@
+{
+  "name": "rapidjs",
+  "version": "1.0.0",
+  "description": "A lightweight front-end framework for Javascript.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon ./src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NOT-LT/RapidJS.git"
+  },
+  "keywords": [
+    "framework",
+    "javascript",
+    "front-end",
+    "lightweight",
+    "frontend",
+    "framework"
+  ],
+  "author": "Taha Aljamri",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NOT-LT/RapidJS/issues"
+  },
+  "homepage": "https://github.com/NOT-LT/RapidJS#readme",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

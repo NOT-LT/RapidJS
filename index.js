@@ -1,0 +1,11 @@
+import { rapid } from "./src/framework.js";
+import { Counter } from "./components/Counter.js";
+import { Home } from "./components/Home.js";
+import { testComponent } from "./components/testComponent.js";
+import { TodoList } from "./components/ToDoList.js";
+  const app = rapid();
+  app.route('/todo', TodoList);
+  app.route('/', Home);
+  app.route('/counter', Counter);
+  app.route('/test', testComponent);
+  app.start();
