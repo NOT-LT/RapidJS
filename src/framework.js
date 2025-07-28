@@ -15,7 +15,8 @@ export class Component {
   // Helper method to safely render with automatic data-component-id injection
   safeRender() {
     try {
-      const html = this.render();
+      let html = this.render();
+      html = this.processNestedComponents(html);
       return this.injectComponentId(html);
     } catch (error) {
       console.error(`Error rendering component ${this.id}:`, error);
@@ -23,10 +24,45 @@ export class Component {
     }
   }
 
-  // Automatically inject data-component-id into the root element
-  injectComponentId(html) {
+  // Process nested components to ensure they have data-component-id
+  processNestedComponents(html) {
     if (!html || typeof html !== 'string') {
-      return `<div data-component-id="${this.id}">Invalid render output</div>`;
+      return html;
+    }
+
+    // Pattern to match ${this.ComponentName.render()} calls
+    const componentPattern = /\$\{this\.(\w+)\.render\(\)\}/g;
+
+    return html.replace(componentPattern, (match, componentPropertyName) => {
+      try {
+        const component = this[componentPropertyName];
+        if (component && typeof component.render === 'function') {
+          // If it's a Component instance, use safeRender
+          if (component instanceof Component) {
+            return component.safeRender();
+          }
+          // If it has an ID but isn't a Component instance, inject the ID manually
+          else if (component.id) {
+            let renderedHTML = component.render();
+            return this.injectComponentIdToHTML(renderedHTML, component.id);
+          }
+          // Fallback to regular render
+          else {
+            return component.render();
+          }
+        }
+        return match;
+      } catch (error) {
+        console.warn('Error processing nested component:', componentPropertyName, error);
+        return match;
+      }
+    });
+  }
+
+  // Helper method to inject component ID into any HTML
+  injectComponentIdToHTML(html, componentId) {
+    if (!html || typeof html !== 'string') {
+      return `<div data-component-id="${componentId}">Invalid render output</div>`;
     }
 
     // Parse the HTML to find the first element
@@ -36,17 +72,22 @@ export class Component {
 
     if (!rootElement || !rootElement.firstElementChild) {
       // If no valid element found, wrap in a div
-      return `<div data-component-id="${this.id}">${html}</div>`;
+      return `<div data-component-id="${componentId}">${html}</div>`;
     }
 
     const firstElement = rootElement.firstElementChild;
 
     // Check if data-component-id already exists
     if (!firstElement.hasAttribute('data-component-id')) {
-      firstElement.setAttribute('data-component-id', this.id);
+      firstElement.setAttribute('data-component-id', componentId);
     }
 
     return firstElement.outerHTML;
+  }
+
+  // Automatically inject data-component-id into the root element
+  injectComponentId(html) {
+    return this.injectComponentIdToHTML(html, this.id);
   }
 
   // Default render method (should be overridden)
@@ -302,18 +343,6 @@ export function registerComponent(instance) {
   return id;
 }
 
-// Auto-register component helper - this will be called automatically
-export function createComponent(ComponentClass, ...args) {
-  const instance = new ComponentClass(...args);
-
-  // Automatically assign ID if not already set
-  if (!instance.id) {
-    instance.id = registerComponent(instance);
-  }
-
-  return instance;
-}
-
 // Update navigateRoute to use safeRender
 export function navigateRoute() {
   try {
@@ -335,7 +364,7 @@ export function navigateRoute() {
       try {
         currentComponent = new route.component();
         clearCurrentComponent();
-        // Always use safeRender to ensure data-component-id is injected
+        // Use safeRender to ensure data-component-id is injected for the main component
         const renderedContent = currentComponent.safeRender();
         root.innerHTML = renderedContent;
       } catch (error) {

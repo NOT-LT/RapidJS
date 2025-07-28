@@ -22,7 +22,7 @@ export class Home extends Component {
 
   render() {
     return `
-    <div">
+    <div>
       <link rel="stylesheet" href="./components/style.css">
       
       <div class="home-container">
@@ -42,7 +42,7 @@ export class Home extends Component {
 
           <div class="counter-showcase">
             <h3 class="showcase-title">Interactive Counter Component</h3>
-            ${this.Counter.render()}
+            ${this.Counter.safeRender()}
           </div>
         </main>
 
