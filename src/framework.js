@@ -202,6 +202,7 @@ function parseValue(value) {
 const events = [
   "click", "dblclick", "mousedown", "mouseup", "mousemove", "mouseover", "mouseout",
   "keydown", "keyup", "input", "change", "submit", "focus", "blur",
+  "contextmenu", "wheel", "drag", "drop", "touchstart", "touchmove", "touchend"
 ];
 
 events.forEach((eventType) => {
