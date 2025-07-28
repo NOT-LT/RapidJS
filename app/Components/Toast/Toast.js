@@ -1,5 +1,5 @@
 // This is a simple componentToast notification component for RapidJS
-import { loadStyle } from "../../src/framework.js";
+import { loadStyle } from "../../../src/framework.js";
 
 export class Toast {
     static container = null;

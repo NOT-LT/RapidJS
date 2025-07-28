@@ -1,10 +1,11 @@
-import { useState } from "../../src/variable.js";
-import { Component } from "../../src/framework.js";
+import { useState } from "../../../src/variable.js";
+import { Component, loadStyle } from "../../../src/framework.js";
 
 export class CounterPage extends Component {
   constructor() {
     super(); // This automatically assigns this.id
     useState({ count: 0 });
+    loadStyle('./app/Pages/CounterPage/style.css'); // Load styles for the counter page
   }
 
   increment() {

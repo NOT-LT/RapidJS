@@ -1,5 +1,5 @@
-import { useState } from "../../src/variable.js";
-import { Component, loadStyle } from "../../src/framework.js";
+import { useState } from "../../../src/variable.js";
+import { Component, loadStyle } from "../../../src/framework.js";
 import { Toast } from "../Toast/Toast.js";
 
 export class WeatherWidget extends Component {
@@ -29,7 +29,7 @@ export class WeatherWidget extends Component {
     // this.setError = setError;
 
     // Load styles - corrected path
-    loadStyle('./components/WeatherWidget/weather-widget.css');
+    loadStyle('./app/Components/WeatherWidget/weather-widget.css');
 
     // Load initial weather
     this.fetchWeather();

@@ -1,8 +1,8 @@
 import { rapid } from "./src/framework.js";
-import { Home } from "./components/Home.js";
-import { WeatherWidget } from "./components/WeatherWidget/WeatherWidget.js";
-import { TodoList } from "./components/ToDoList.js";
-import { CounterPage } from "./components/CounterPage/CounterPage.js";
+import { Home } from "./app/Pages/HomePage/Home.js";
+import { WeatherWidget } from "./app/Components/WeatherWidget/WeatherWidget.js";
+import { TodoList } from "./app/Components/ToDoList.js";
+import { CounterPage } from "./app/Pages/CounterPage/CounterPage.js";
 
 const app = rapid();
 app.route('/todo', TodoList);

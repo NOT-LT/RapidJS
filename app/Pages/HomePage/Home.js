@@ -1,6 +1,6 @@
-import { Component } from "../src/framework.js";
-import { Counter } from "./Counter.js";
-import rapid from "../index.js";
+import { Component } from "../../../src/framework.js";
+import { Counter } from "../../Components/Counter.js";
+import rapid from "../../../index.js";
 
 export class Home extends Component {
   constructor() {

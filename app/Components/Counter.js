@@ -1,5 +1,5 @@
-import { useState } from "../src/variable.js";
-import { Component } from "../src/framework.js";
+import { useState } from "../../src/variable.js";
+import { Component } from "../../src/framework.js";
 
 export class Counter extends Component {
   constructor() {

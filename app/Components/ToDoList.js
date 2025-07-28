@@ -1,5 +1,5 @@
-import { useState, useRef } from "../src/variable.js";
-import { Component, loadStyle } from "../src/framework.js";
+import { useState, useRef } from "../../src/variable.js";
+import { Component, loadStyle } from "../../src/framework.js";
 
 export class TodoList extends Component {
   constructor() {
