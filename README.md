@@ -2,6 +2,8 @@
 
 RapidJS is a lightweight, reactive front-end framework for building modern web applications. It provides a simple and intuitive API for managing state, rendering components, and handling events.
 
+[Visit in npmjs](https://www.npmjs.com/package/create-rapidjs-app)
+
 ![Home Page Sample Image](./sample_imgs/rapidJS_1.png)
 ![Weather Widget Sample Image](./sample_imgs/rapidJS_2.png)
 
