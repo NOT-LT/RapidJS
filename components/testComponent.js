@@ -1,12 +1,12 @@
 // Counter.js
-import { registerComponent } from "../src/framework.js";
+import { Component } from "../src/framework.js";
 import { createVar } from "../src/variable.js";
-export class testComponent {
+export class testComponent extends Component {
   constructor() {
+    super(); // This automatically assigns this.id
     const [count, setCount] = createVar(0);
     this.count = count;
     this.setCount = setCount;
-    this.id = registerComponent(this); // Register the instance
   }
 
   increment() {

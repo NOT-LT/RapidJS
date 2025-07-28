@@ -1,23 +1,32 @@
-import { createVar } from "../../src/variable.js";
-import { registerComponent, loadStyle } from "../../src/framework.js";
+import { useState } from "../../src/variable.js";
+import { Component, loadStyle } from "../../src/framework.js";
 import { Toast } from "../Toast/Toast.js";
 
-export class WeatherWidget {
+export class WeatherWidget extends Component {
   constructor() {
-    const [weather, setWeather] = createVar(null);
-    const [loading, setLoading] = createVar(false);
-    const [city, setCity] = createVar("Bahrain");
-    const [error, setError] = createVar(null);
+    super(); // This automatically assigns this.id and sets context
 
-    this.weather = weather;
-    this.setWeather = setWeather;
-    this.loading = loading;
-    this.setLoading = setLoading;
-    this.city = city;
-    this.setCity = setCity;
-    this.error = error;
-    this.setError = setError;
-    this.id = registerComponent(this);
+    // Now createVar will automatically link to this component
+    useState({
+      weather: null,
+      loading: false,
+      city: "Bahrain",
+      error: null
+    });
+
+    // const [weather, setWeather] = createVar(null);
+    // const [loading, setLoading] = createVar(false);
+    // const [city, setCity] = createVar("Bahrain");
+    // const [error, setError] = createVar(null);
+
+    // this.weather = weather;
+    // this.setWeather = setWeather;
+    // this.loading = loading;
+    // this.setLoading = setLoading;
+    // this.city = city;
+    // this.setCity = setCity;
+    // this.error = error;
+    // this.setError = setError;
 
     // Load styles - corrected path
     loadStyle('./components/WeatherWidget/weather-widget.css');

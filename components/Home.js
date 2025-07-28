@@ -1,15 +1,14 @@
-import { registerComponent } from "../src/framework.js";
+import { Component } from "../src/framework.js";
 import { Counter } from "./Counter.js";
 import rapid from "../index.js";
 
-export class Home {
+export class Home extends Component {
   constructor() {
-    this.id = registerComponent(this); // Register the instance
-    this.Counter = new Counter(); // Create an instance of Counter
+    super(); // This automatically assigns this.id
+    this.Counter = new Counter();
   }
 
   navigateToTodo() {
-    console.log("Navigating to Todo List");
     rapid.navigateTo('/todo');
   }
 
@@ -23,8 +22,9 @@ export class Home {
 
   render() {
     return `
-    <div data-component-id="${this.id}">
-     
+    <div">
+      <link rel="stylesheet" href="./components/style.css">
+      
       <div class="home-container">
         <main class="home-main">
           <div class="framework-badge">
@@ -50,18 +50,18 @@ export class Home {
           <div class="footer-content">
             <h3 class="footer-title">Explore More Components</h3>
             <div class="footer-links">
-             <button class="footer-link" @click="navigateToTodo">
+              <div class="footer-link" @click="navigateToTodo">
                 <span>📝</span>
                 <span>Todo List</span>
-              </button>
-              <button class="footer-link" @click="navigateToCounter">
+              </div>
+              <div class="footer-link" @click="navigateToCounter">
                 <span>🔢</span>
                 <span>Counter Page</span>
-              </button>
-              <button class="footer-link" @click="navigateToWeather">
+              </div>
+              <div class="footer-link" @click="navigateToWeather">
                 <span>🌤️</span>
                 <span>Weather Widget</span>
-              </button>
+              </div>
             </div>
           </div>
         </footer>

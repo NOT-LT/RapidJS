@@ -1,9 +1,66 @@
+import { setCurrentComponent, clearCurrentComponent } from "./variable.js";
+import { setComponentInRegistry, getComponentFromRegistry, setCurrentComponentContext, clearCurrentComponentContext, getCurrentComponentId as getComponentId } from "./utils.js";
+
+// Base Component class that automatically handles ID assignment
+export class Component {
+  constructor() {
+    try {
+      this.id = registerComponent(this);
+    } catch (error) {
+      console.error('Error registering component:', error);
+      throw error;
+    }
+  }
+
+  // Helper method to safely render with automatic data-component-id injection
+  safeRender() {
+    try {
+      const html = this.render();
+      return this.injectComponentId(html);
+    } catch (error) {
+      console.error(`Error rendering component ${this.id}:`, error);
+      return `<div data-component-id="${this.id}">Error rendering component</div>`;
+    }
+  }
+
+  // Automatically inject data-component-id into the root element
+  injectComponentId(html) {
+    if (!html || typeof html !== 'string') {
+      return `<div data-component-id="${this.id}">Invalid render output</div>`;
+    }
+
+    // Parse the HTML to find the first element
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<root>${html}</root>`, 'text/html');
+    const rootElement = doc.querySelector('root');
+
+    if (!rootElement || !rootElement.firstElementChild) {
+      // If no valid element found, wrap in a div
+      return `<div data-component-id="${this.id}">${html}</div>`;
+    }
+
+    const firstElement = rootElement.firstElementChild;
+
+    // Check if data-component-id already exists
+    if (!firstElement.hasAttribute('data-component-id')) {
+      firstElement.setAttribute('data-component-id', this.id);
+    }
+
+    return firstElement.outerHTML;
+  }
+
+  // Default render method (should be overridden)
+  render() {
+    console.warn(`Component ${this.constructor.name} should implement render() method`);
+    return `<div>Component ${this.constructor.name}</div>`;
+  }
+}
+
 // Reactive system
 let routes = [];
 let currentComponent = null;
-const componentRegistry = new Map();
-let componentId = 0;
 const loadedComponentStyles = new Set();
+let componentId = 0;
 
 window.addEventListener('popstate', navigateRoute);
 
@@ -128,8 +185,6 @@ events.forEach((eventType) => {
               parsedParams = parseParameters(methodParams);
             }
 
-            console.log("Parsed Parameters:", parsedParams);
-
             // Find the closest component element
             const componentElement = currentElement.closest("[data-component-id]");
             if (!componentElement) continue;
@@ -139,8 +194,21 @@ events.forEach((eventType) => {
             if (component && typeof component[methodName] === "function") {
               event.preventDefault(); // Prevent default behavior
               event.stopPropagation(); // Stop event bubbling
-              // Pass as an object with event and params
-              component[methodName]({ event, params: parsedParams });
+
+              // Support both simple method calls and complex parameter calls
+              try {
+                if (parsedParams.length > 0) {
+                  // Pass parsed parameters directly
+                  component[methodName]({ event, params: parsedParams });
+                } else {
+                  // No parameters, just call the method
+                  component[methodName]({ event });
+                }
+              } catch (error) {
+                console.error(`Error calling method ${methodName}:`, error);
+                // Fallback: pass event and params as object (old behavior)
+                component[methodName]({ event, params: parsedParams });
+              }
               return; // Exit after handling the event
             }
           }
@@ -153,12 +221,21 @@ events.forEach((eventType) => {
 
 // Simple style loader function
 export async function loadStyle(path) {
+  if (!path || typeof path !== 'string') {
+    console.warn('Invalid CSS path provided to loadStyle');
+    return;
+  }
+
   try {
     const response = await fetch(path);
+    if (!response.ok) {
+      throw new Error(`Failed to load CSS: ${response.status} ${response.statusText}`);
+    }
+
     let cssContent = await response.text();
 
     // Get the component ID from the call stack context
-    const componentId = getCurrentComponentId();
+    const componentId = getComponentId();
 
     // Create a unique key for scoped styles
     const styleKey = componentId ? `${path}-${componentId}` : path;
@@ -180,25 +257,10 @@ export async function loadStyle(path) {
     document.head.appendChild(style);
 
     loadedComponentStyles.add(styleKey);
+    console.log(`Loaded CSS: ${path}${componentId ? ` (scoped to ${componentId})` : ''}`);
   } catch (error) {
     console.warn(`Failed to load style: ${path}`, error);
   }
-}
-
-// Helper function to get the current component ID
-function getCurrentComponentId() {
-  // Try to find the component that's currently being constructed
-  const error = new Error();
-  const stack = error.stack;
-
-  // Look through the component registry to find which component is being initialized
-  for (const [id, component] of componentRegistry.entries()) {
-    if (component && component.constructor && stack.includes(component.constructor.name)) {
-      return id;
-    }
-  }
-
-  return null;
 }
 
 function scopeCSS(cssContent, componentId) {
@@ -231,40 +293,122 @@ function scopeCSS(cssContent, componentId) {
 export function registerComponent(instance) {
   const id = `component-${componentId++}`;
 
-  // Store the instance immediately for getCurrentComponentId to find it
-  componentRegistry.set(id, instance);
+  // Set the current component context for variable creation
+  setCurrentComponent(instance);
+
+  // Store the instance in shared registry
+  setComponentInRegistry(id, instance);
 
   return id;
 }
 
-// ... rest of existing code remains the same ...
+// Auto-register component helper - this will be called automatically
+export function createComponent(ComponentClass, ...args) {
+  const instance = new ComponentClass(...args);
+
+  // Automatically assign ID if not already set
+  if (!instance.id) {
+    instance.id = registerComponent(instance);
+  }
+
+  return instance;
+}
+
+// Update navigateRoute to use safeRender
+export function navigateRoute() {
+  try {
+    const path = window.location.pathname;
+    console.log("Navigating to:", path);
+    const route = routes.find((route) => route.path === path);
+
+    const root = document.getElementById("root");
+    if (!root) {
+      console.error("Root element not found");
+      return;
+    }
+
+    if (currentComponent) {
+      root.innerHTML = "";
+    }
+
+    if (route) {
+      try {
+        currentComponent = new route.component();
+        clearCurrentComponent();
+        // Always use safeRender to ensure data-component-id is injected
+        const renderedContent = currentComponent.safeRender();
+        root.innerHTML = renderedContent;
+      } catch (error) {
+        console.error(`Error creating component for route ${path}:`, error);
+        root.innerHTML = `<div>Error loading page: ${error.message}</div>`;
+      }
+    } else {
+      console.warn(`No route found for path: ${path}`);
+      root.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <h1>404 - Page Not Found</h1>
+          <p>The page you're looking for doesn't exist.</p>
+          <a href="/" style="color: #3b82f6; text-decoration: none;">Go back home</a>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error("Error in navigateRoute:", error);
+    const root = document.getElementById("root");
+    if (root) {
+      root.innerHTML = `<div>Navigation error: ${error.message}</div>`;
+    }
+  }
+}
+
+// Update updateDOM to use safeRender
+export function updateDOM(component) {
+  if (!component || !component.id) return;
+
+  const element = document.querySelector(`[data-component-id="${component.id}"]`);
+  if (element) {
+    // Store active element info before re-render
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement && activeElement.tagName === 'INPUT';
+    const activeInputId = isInputFocused ? activeElement.id : null;
+    const cursorPosition = isInputFocused ? activeElement.selectionStart : null;
+
+    // Create new element using safeRender to ensure data-component-id is injected
+    const newHTML = component.safeRender();
+    const newElement = document.createRange().createContextualFragment(newHTML).firstElementChild;
+
+    if (newElement) {
+      // Replace the element
+      element.parentNode.replaceChild(newElement, element);
+
+      // Restore focus and cursor position if there was an active input
+      if (activeInputId) {
+        const newInput = document.getElementById(activeInputId);
+        if (newInput) {
+          newInput.focus();
+          if (cursorPosition !== null) {
+            newInput.setSelectionRange(cursorPosition, cursorPosition);
+          }
+        }
+      }
+    }
+  } else {
+    // If the component element doesn't exist, re-render the entire current component
+    if (currentComponent && currentComponent.id === component.id) {
+      const root = document.getElementById("root");
+      if (root) {
+        root.innerHTML = currentComponent.safeRender();
+      }
+    }
+  }
+}
+
 export function getComponent(id) {
-  return componentRegistry.get(id);
+  return getComponentFromRegistry(id);
 }
 
 export function createRoute(path, component) {
   routes.push({ path, component });
-}
-
-export function navigateRoute() {
-  const path = window.location.pathname;
-  console.log("Navigating to:", path);
-  const route = routes.find((route) => route.path === path);
-
-  const root = document.getElementById("root");
-
-  if (currentComponent) {
-    // Cleanup previous component if needed
-    root.innerHTML = "";
-  }
-
-  if (route) {
-    currentComponent = new route.component();
-    root.innerHTML = currentComponent.render();
-  } else {
-    console.error(`No route found for path: ${path}`);
-    root.innerHTML = "404 - Not Found";
-  }
 }
 
 export function rapid() {
@@ -291,24 +435,4 @@ function start() {
 // Clean up hash if present
 if (window.location.hash) {
   history.replaceState(null, '', window.location.pathname + window.location.search);
-}
-
-export function updateDOM(component) {
-  if (!component || !component.id) return;
-
-  const element = document.querySelector(`[data-component-id="${component.id}"]`);
-  if (element) {
-    const newElement = document.createRange().createContextualFragment(component.render()).firstElementChild;
-    if (newElement) {
-      element.parentNode.replaceChild(newElement, element);
-    }
-  } else {
-    // If the component element doesn't exist, re-render the entire current component
-    if (currentComponent && currentComponent.id === component.id) {
-      const root = document.getElementById("root");
-      if (root) {
-        root.innerHTML = currentComponent.render();
-      }
-    }
-  }
 }

@@ -1,23 +1,18 @@
-import { createVar } from "../src/variable.js";
-import { registerComponent, loadStyle } from "../src/framework.js";
+import { useState } from "../src/variable.js";
+import { Component } from "../src/framework.js";
 
-export class Counter {
+export class Counter extends Component {
   constructor() {
-    const [count, setCount] = createVar(0);
-    this.count = count;
-    this.setCount = setCount;
-    this.id = registerComponent(this); // Register the instance
-
+    super();
+    useState({ count: 0 });
   }
 
   increment() {
     this.setCount(this.count() + 1);
-    console.log("Incremented count:", this.count());
   }
 
   decrement() {
     this.setCount(this.count() - 1);
-    console.log("Decremented count:", this.count());
   }
 
   reset() {
@@ -26,12 +21,12 @@ export class Counter {
 
   render() {
     return `
-      <div data-component-id="${this.id}" >
+      <div">
         <div class="counter-container">
-          <div class="counter-buttons">
-            <button class="counter-button counter-button-decrement" @click="decrement()">-</button>
-            <button class="counter-button counter-button-increment" @click="increment()">+</button>
-            <button class="counter-button counter-button-reset" @click="reset">Reset</button>
+          <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem;">
+            <button class="counter-button" @click="decrement" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">-</button>
+            <button class="counter-button" @click="increment">+</button>
+            <button class="counter-button" @click="reset" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">Reset</button>
           </div>
           <p class="counter-display">Count: ${this.count()}</p>
         </div>
