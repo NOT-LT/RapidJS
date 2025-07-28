@@ -27,7 +27,7 @@ export const createVar = (initialValue) => {
 
   function value(id) {
     if (effectCallback) variable.subscribe(effectCallback);
-    
+
     if (id) {
       queueMicrotask(() => {
         const element = document.getElementById(id);
