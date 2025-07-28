@@ -2,6 +2,9 @@
 
 RapidJS is a lightweight, reactive front-end framework for building modern web applications. It provides a simple and intuitive API for managing state, rendering components, and handling events.
 
+![Home Page Sample Image](./sample_imgs/rapidJS_1.png)
+![Weather Widget Sample Image](./sample_imgs/rapidJS_2.png)
+
 ---
 
 ## Features
@@ -25,15 +28,14 @@ RapidJS is a lightweight, reactive front-end framework for building modern web a
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/NOT-LT/RapidJS.git
-   cd RapidJS
-   ```
+1. set up the project 
+    ```bash
+    npx create-rapidjs-app my-app
+    ```
 
-2. Install dependencies:
+2. change directory to the newly created project directory
    ```bash
-   npm install
+   cd my-app
    ```
 
 3. Start the development server:
@@ -129,10 +131,11 @@ this.setInputValue("Hello"); // Setter
 ### 3. **Event Binding**
 
 Use the `@` prefix to bind events directly in your templates.
+Parameters are support
 
 ```html
-<button @click="increment">Increment</button>
-<input @input="handleInput" />
+<button @click="increment()">Increment</button>
+<input @input="handleInput()" />
 ```
 
 ---
